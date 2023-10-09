@@ -11,9 +11,12 @@ import cors from 'cors';
 
 const app = express();
 
+//lets allow our server to accept requests from our client all we need to do is add cors middleware
+
 const corsOptions = {
     origin: 'http://localhost:5173',
-    optionsSuccessStatus: 200,
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+
 };
 
 var token =''
@@ -25,7 +28,7 @@ const JWT_SECRET = 'mysecretkey';
 
 // Middleware to authenticate JWT token
 function authenticateToken(req, res, next) {
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRtaW4iLCJpYXQiOjE2OTY3OTYwNDN9.tpZStULcZXd3dlNiLnedQtRWP03uOJzNX6zRPSR9k6s';
+    const token = req.headers['authorization'];
     if (token == null) {
         return res.status(401).json({ message: 'Authentication token is missing' });
     }
@@ -39,6 +42,7 @@ function authenticateToken(req, res, next) {
             const user = await User.findOne({ name: decodedToken.name });
             if (!user) {
                 return res.status(400).json({ message: 'Cannot find user' });
+
             }
 
             req.user = user;
@@ -98,11 +102,7 @@ app.post('/login', async (req, res) => {
 
 app.get('/protected', authenticateToken, (req, res) => {
     // The decoded token is available in the req.user object
-    console.log(token);
-
     const decodedToken = req.user;
-    console.log("Decoded Token:", decodedToken);
-    
     res.json({ message: 'This is a protected route', user: req.user });
 });
 
